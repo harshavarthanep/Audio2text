@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio to Text Converter</title>
+    <title>Audio File to Text Converter</title>
     <style>
         :root {
-            --primary: #4f46e5; /* Indigo */
-            --danger: #ef4444;  /* Red */
-            --success: #22c55e; /* Green */
-            --bg: #f3f4f6;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --bg: #f8fafc;
             --card: #ffffff;
-            --text: #1f2937;
+            --text: #1e293b;
+            --border: #e2e8f0;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             display: flex;
             justify-content: center;
-            align-items: center;
             min-height: 100vh;
             margin: 0;
             padding: 20px;
@@ -31,121 +32,145 @@
             width: 100%;
             max-width: 800px;
             padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
+            margin-top: 2rem;
         }
 
-        .header {
+        .header { text-align: center; }
+        .header h1 { margin: 0; font-size: 1.5rem; color: #0f172a; }
+        
+        /* Upload Section */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
             text-align: center;
+            background: #f1f5f9;
+            transition: all 0.2s;
+        }
+        
+        .upload-area:hover { border-color: var(--primary); background: #eef2ff; }
+
+        input[type="file"] { display: none; }
+        
+        .file-label {
+            cursor: pointer;
+            color: var(--primary);
+            font-weight: 600;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 4px;
+            background-color: #fff;
+            border: 1px solid var(--border);
         }
 
-        .header h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            color: #111827;
+        .file-label:hover {
+            background-color: #f8fafc;
         }
 
-        .header p {
-            color: #6b7280;
-            margin-top: 0.5rem;
+        /* Audio Player hidden by default, shown when file loaded */
+        audio {
+            width: 100%;
+            margin-top: 15px;
+            display: none; 
         }
 
-        /* Status Indicator */
+        /* Status Bar */
         .status-bar {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 10px;
-            font-weight: 600;
             font-size: 0.9rem;
-            height: 24px;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 6px;
         }
 
-        .dot {
-            height: 12px;
-            width: 12px;
-            background-color: #d1d5db;
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #94a3b8;
             border-radius: 50%;
-            display: inline-block;
         }
 
-        .listening .dot {
+        .status-dot.active {
             background-color: var(--danger);
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
             animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
-        /* Main Text Area */
+        /* Text Area */
         textarea {
             width: 100%;
             height: 300px;
             padding: 1rem;
-            border: 2px solid #e5e7eb;
+            border: 1px solid var(--border);
             border-radius: 8px;
-            font-size: 1.1rem;
-            line-height: 1.6;
+            font-family: inherit;
+            font-size: 1rem;
+            line-height: 1.5;
             resize: vertical;
-            outline: none;
-            transition: border-color 0.2s;
-            box-sizing: border-box; /* Fixes padding issues */
+            box-sizing: border-box;
         }
 
-        textarea:focus {
-            border-color: var(--primary);
-        }
+        textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
 
-        /* Controls */
+        /* Buttons */
         .controls {
             display: flex;
+            gap: 10px;
             flex-wrap: wrap;
-            gap: 1rem;
             justify-content: space-between;
         }
-
-        .btn-group {
-            display: flex;
-            gap: 0.5rem;
-        }
+        
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
 
         button {
-            padding: 0.75rem 1.5rem;
+            padding: 10px 20px;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
+            border-radius: 6px;
+            font-weight: 500;
             cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            transition: background 0.2s;
+            font-size: 0.95rem;
         }
 
-        button:active {
-            transform: scale(0.98);
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        
+        .btn-stop { background: var(--danger); color: white; display: none; }
+        
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+        .btn-download { background: var(--success); color: white; }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            height: 6px;
+            overflow: hidden;
+            display: none;
+            margin-top: -10px;
         }
-
-        .btn-record { background-color: var(--primary); color: white; }
-        .btn-stop { background-color: var(--danger); color: white; display: none; }
-        .btn-secondary { background-color: #e5e7eb; color: #374151; }
-        .btn-download { background-color: var(--success); color: white; }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Responsive for mobile */
-        @media (max-width: 600px) {
-            .controls { flex-direction: column; }
-            .btn-group { width: 100%; justify-content: space-between; }
-            button { width: 100%; justify-content: center; }
+        
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: var(--primary);
+            transition: width 0.2s;
         }
     </style>
 </head>
@@ -154,164 +179,230 @@
 <div class="container">
     <div class="header">
         <h1>🎙️ Audio to Text Converter</h1>
-        <p>Speak clearly to generate your document.</p>
     </div>
 
-    <div class="status-bar" id="statusBar">
-        <span class="dot"></span>
-        <span id="statusText">Ready to record</span>
+    <div class="upload-area">
+        <input type="file" id="audioInput" accept="audio/*,video/*">
+        <label for="audioInput" class="file-label">📂 Select Audio File</label>
+        <div id="fileName" style="margin-top: 10px; font-size: 0.9em; color: #64748b;">No file selected</div>
+        <audio id="audioPlayer" controls></audio>
     </div>
-
-    <textarea id="transcript" placeholder="Your speech will appear here..."></textarea>
 
     <div class="controls">
         <div class="btn-group">
-            <button id="startBtn" class="btn-record" onclick="startRecording()">
-                <span>Start Recording</span>
-            </button>
-            <button id="stopBtn" class="btn-stop" onclick="stopRecording()">
-                <span>Stop</span>
-            </button>
-            <button class="btn-secondary" onclick="clearText()" title="Clear Text">🗑️</button>
+            <button id="transcribeBtn" class="btn-primary" onclick="startTranscription()">▶ Start Transcription</button>
+            <button id="stopBtn" class="btn-stop" onclick="stopTranscription()">⏹ Stop</button>
+            <button class="btn-outline" id="micBtn" onclick="toggleMic()">🎤 Switch to Mic Mode</button>
         </div>
-
         <div class="btn-group">
-            <button class="btn-secondary" onclick="copyText()">📋 Copy</button>
-            <button class="btn-download" onclick="downloadDoc()">💾 Download</button>
+             <button class="btn-outline" onclick="copyText()">📋 Copy</button>
+             <button class="btn-download" onclick="downloadDoc()">💾 Save as Word</button>
         </div>
     </div>
+
+    <div class="status-bar">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Ready. Upload a file or switch to mic mode.</span>
+    </div>
+
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <textarea id="resultText" placeholder="The converted text will appear here..."></textarea>
 </div>
 
 <script>
-    // --- Configuration & Setup ---
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const statusBar = document.getElementById('statusBar');
+    // --- Variables ---
+    const audioInput = document.getElementById('audioInput');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const resultText = document.getElementById('resultText');
     const statusText = document.getElementById('statusText');
-    const transcriptArea = document.getElementById('transcript');
+    const statusDot = document.getElementById('statusDot');
+    const transcribeBtn = document.getElementById('transcribeBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const micBtn = document.getElementById('micBtn');
+    const fileNameDisplay = document.getElementById('fileName');
+    const progressBar = document.getElementById('progressBar');
+    const progressContainer = document.getElementById('progressContainer');
 
     let recognition;
-    
-    // Check for browser support
+    let isFileMode = true; // Default to file mode
+
+    // --- Setup Speech Recognition ---
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognition = new SpeechRecognition();
-        
-        recognition.continuous = true;    // Keep recording even if user pauses
-        recognition.interimResults = true; // Show results while speaking
-        recognition.lang = 'en-US';       // Default language
-
-        // --- Event Handlers ---
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
 
         recognition.onstart = () => {
-            statusBar.classList.add('listening');
-            statusText.innerText = "Listening... (Speak now)";
-            startBtn.style.display = 'none';
-            stopBtn.style.display = 'flex';
+            statusDot.classList.add('active');
+            transcribeBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
         };
 
         recognition.onend = () => {
-            statusBar.classList.remove('listening');
-            statusText.innerText = "Recording stopped";
-            startBtn.style.display = 'flex';
-            stopBtn.style.display = 'none';
+            // Auto-restart if we are in file mode and the audio is still playing
+            if (isFileMode && !audioPlayer.paused) {
+                recognition.start(); 
+            } else {
+                statusDot.classList.remove('active');
+                statusText.innerText = "Stopped.";
+                transcribeBtn.style.display = 'inline-block';
+                stopBtn.style.display = 'none';
+            }
         };
 
         recognition.onerror = (event) => {
-            console.error(event.error);
-            statusText.innerText = "Error: " + event.error;
-            stopRecording();
+            console.error("Speech Error:", event.error);
+            if(event.error !== 'no-speech') {
+                statusText.innerText = "Error: " + event.error;
+            }
         };
 
-        let finalTranscript = '';
-
         recognition.onresult = (event) => {
-            let interimTranscript = '';
+            let interim = '';
+            let final = '';
 
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript + ' ';
+                    final += event.results[i][0].transcript + ' ';
                 } else {
-                    interimTranscript += event.results[i][0].transcript;
+                    interim += event.results[i][0].transcript;
                 }
             }
-
-            // Combine existing manual edits with new speech
-            // Note: This simple logic appends. If user edits the middle, 
-            // the new speech still goes to end.
-            const currentContent = transcriptArea.value;
             
-            // We only update if there is new data to avoid overwriting manual edits constantly
-            // For a simple app, we append to the text area.
-            if(event.results[event.resultIndex].isFinal) {
-                transcriptArea.value += event.results[event.resultIndex][0].transcript + ' ';
-                transcriptArea.scrollTop = transcriptArea.scrollHeight; // Auto scroll to bottom
+            if (final) {
+                resultText.value += final;
+                resultText.scrollTop = resultText.scrollHeight;
             }
         };
-
     } else {
-        alert("Your browser does not support the Web Speech API. Please use Google Chrome or Microsoft Edge.");
-        startBtn.disabled = true;
-        statusText.innerText = "Browser not supported";
+        alert("Web Speech API not supported. Please use Google Chrome or Microsoft Edge.");
     }
 
-    // --- Functions ---
+    // --- File Handling ---
+    audioInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const fileURL = URL.createObjectURL(file);
+            audioPlayer.src = fileURL;
+            audioPlayer.style.display = 'block';
+            fileNameDisplay.innerText = "Selected: " + file.name;
+            statusText.innerText = "File loaded. Press Start to transcribe.";
+            
+            // Ensure we are in file mode
+            isFileMode = true;
+            micBtn.innerText = "🎤 Switch to Mic Mode";
+            progressContainer.style.display = 'block';
+        }
+    });
 
-    function startRecording() {
-        if(recognition) {
-            // clear interim history for this session if needed, or keep appending
+    // Update progress bar as audio plays
+    audioPlayer.ontimeupdate = () => {
+        const percentage = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+        progressBar.style.width = percentage + "%";
+    };
+
+    audioPlayer.onended = () => {
+        recognition.stop();
+        statusText.innerText = "Audio finished.";
+    };
+
+    // --- Control Functions ---
+
+    function startTranscription() {
+        if (!recognition) return;
+        
+        // Don't clear text automatically, let user decide to keep or clear
+        // resultText.value = ''; 
+        
+        if (isFileMode) {
+            if (!audioPlayer.src) {
+                alert("Please upload a file first.");
+                return;
+            }
+            statusText.innerText = "Playing and Transcribing...";
+            audioPlayer.play();
+            recognition.start();
+        } else {
+            statusText.innerText = "Listening to microphone...";
             recognition.start();
         }
     }
 
-    function stopRecording() {
-        if(recognition) {
-            recognition.stop();
-        }
+    function stopTranscription() {
+        if (recognition) recognition.stop();
+        if (isFileMode) audioPlayer.pause();
     }
 
-    function clearText() {
-        if(confirm("Are you sure you want to clear the text?")) {
-            transcriptArea.value = '';
+    function toggleMic() {
+        isFileMode = !isFileMode;
+        if (!isFileMode) {
+            // Mic Mode
+            statusText.innerText = "Microphone Mode Selected. Press Start to speak.";
+            audioPlayer.style.display = 'none';
+            fileNameDisplay.innerText = "Input: Microphone";
+            progressContainer.style.display = 'none';
+            micBtn.innerText = "📂 Switch to File Mode";
+            micBtn.classList.remove('btn-outline');
+            micBtn.classList.add('btn-primary');
+        } else {
+            // File Mode
+            statusText.innerText = "File Mode. Please upload a file.";
+            audioPlayer.style.display = audioPlayer.src ? 'block' : 'none';
+            fileNameDisplay.innerText = audioInput.files[0] ? "Selected: " + audioInput.files[0].name : "No file selected";
+            progressContainer.style.display = 'block';
+            micBtn.innerText = "🎤 Switch to Mic Mode";
+            micBtn.classList.add('btn-outline');
+            micBtn.classList.remove('btn-primary');
         }
     }
 
     function copyText() {
-        transcriptArea.select();
-        document.execCommand('copy'); // Fallback for older browsers
-        // Modern API
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(transcriptArea.value);
-        }
+        resultText.select();
+        document.execCommand('copy');
         
-        // Visual feedback
+        // Use Clipboard API if available
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(resultText.value);
+        }
+
         const originalText = statusText.innerText;
         statusText.innerText = "Copied to clipboard!";
         setTimeout(() => statusText.innerText = originalText, 2000);
     }
 
     function downloadDoc() {
-        const text = transcriptArea.value;
-        if(text.trim() === "") {
-            alert("Nothing to download!");
+        const text = resultText.value;
+        if (!text) {
+            alert("No text to save!");
             return;
         }
 
-        // Create a blob (file-like object)
-        const blob = new Blob([text], { type: 'text/plain' });
-        const anchor = document.createElement('a');
-        
-        // Create a timestamp for the filename
-        const date = new Date();
-        const filename = `Transcript_${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}.txt`;
+        // Create a proper HTML structure for Word
+        const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+                       "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+                       "xmlns='http://www.w3.org/TR/REC-html40'>" +
+                       "<head><meta charset='utf-8'><title>Export HTML to Word Document with JavaScript</title></head><body>";
+        const footer = "</body></html>";
+        const sourceHTML = header + text.replace(/\n/g, "<br>") + footer;
 
-        anchor.href = window.URL.createObjectURL(blob);
-        anchor.download = filename;
+        const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
         
-        // Trigger download
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
+        // Date timestamp
+        const now = new Date();
+        const timestamp = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}_${now.getHours()}${now.getMinutes()}`;
+        
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Transcription_${timestamp}.doc`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 </script>
 
