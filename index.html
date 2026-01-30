@@ -3,451 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Audio Transcriber</title>
+    <title>Clean Audio Transcriber</title>
     <style>
         :root {
-            --primary: #2563eb; /* Royal Blue */
-            --primary-dark: #1e40af;
-            --secondary: #64748b;
-            --success: #16a34a;
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --border-radius: 12px;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text: #334155;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             display: flex;
             justify-content: center;
+            padding: 2rem;
+            margin: 0;
             min-height: 100vh;
         }
 
-        .app-container {
-            background: var(--card-bg);
+        .app {
+            background: var(--surface);
             width: 100%;
-            max-width: 900px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            max-width: 850px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border: 1px solid var(--border);
         }
 
         /* Header */
         header {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            padding: 1.5rem 2rem;
+            background: #1e293b;
             color: white;
+            padding: 1rem 2rem;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
         }
+        
+        header h1 { font-size: 1.25rem; margin: 0; font-weight: 500; }
+        .status-badge { font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; }
 
-        header h1 { margin: 0; font-size: 1.4rem; font-weight: 600; letter-spacing: 0.5px; }
-        .badge { background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; }
+        /* Main Body */
+        main { padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
 
-        /* Main Content */
-        .main-content { padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
-
-        /* File Upload Zone */
-        .upload-zone {
+        /* Upload Area */
+        .upload-box {
             border: 2px dashed #cbd5e1;
-            border-radius: var(--border-radius);
+            border-radius: 8px;
             padding: 2rem;
             text-align: center;
-            transition: all 0.3s ease;
-            background: #f8fafc;
+            background: #f1f5f9;
             cursor: pointer;
             position: relative;
+            transition: all 0.2s;
         }
 
-        .upload-zone:hover { border-color: var(--primary); background: #eff6ff; }
-        .upload-zone input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-        .upload-icon { font-size: 2.5rem; margin-bottom: 0.5rem; display: block; }
-        .file-info { font-weight: 600; color: var(--primary); display: none; margin-top: 10px; }
+        .upload-box:hover { border-color: var(--primary); background: #e0f2fe; }
+        
+        .upload-content p { margin: 5px 0 0; color: #64748b; font-size: 0.9rem; }
+        .upload-icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+        
+        input[type="file"] {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+        }
 
-        /* Audio Player Styling */
-        #audioPlayer { width: 100%; margin-top: 10px; display: none; border-radius: 8px; }
-
-        /* Toolbar */
+        /* Controls Toolbar */
         .toolbar {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            padding: 10px;
+            gap: 12px;
+            padding: 12px;
             background: #f8fafc;
+            border: 1px solid var(--border);
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
             align-items: center;
         }
 
         button {
-            padding: 10px 18px;
+            padding: 10px 16px;
             border: none;
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            transition: 0.2s;
         }
 
-        .btn-start { background-color: var(--primary); color: white; }
-        .btn-start:hover { background-color: var(--primary-dark); transform: translateY(-1px); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
         
-        .btn-stop { background-color: #ef4444; color: white; display: none; }
-        .btn-stop:hover { background-color: #dc2626; }
+        .btn-stop { background: var(--danger); color: white; display: none; }
+        
+        .btn-outline { background: white; border: 1px solid #cbd5e1; color: var(--text); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 
-        .btn-action { background-color: white; border: 1px solid #cbd5e1; color: var(--secondary); }
-        .btn-action:hover { border-color: var(--primary); color: var(--primary); background: white; }
+        .btn-ghost { background: transparent; color: var(--text); }
+        .btn-ghost:hover { background: #e2e8f0; }
 
-        .spacer { flex-grow: 1; }
+        .spacer { flex: 1; }
 
         /* Text Area */
-        .editor-container { position: relative; flex-grow: 1; }
+        .editor-wrapper { position: relative; }
         
         textarea {
             width: 100%;
             height: 400px;
             padding: 1.5rem;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
             border-radius: 8px;
-            font-size: 1.05rem;
-            line-height: 1.7;
-            color: #334155;
+            font-size: 1.1rem;
+            line-height: 1.6;
             resize: vertical;
             outline: none;
-            box-sizing: border-box;
             background: #fafafa;
+            color: #1e293b;
             font-family: inherit;
+            box-sizing: border-box;
         }
 
-        textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
-        /* Status & Hints */
-        .status-bar {
-            margin-top: -10px;
-            font-size: 0.9rem;
-            color: var(--secondary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .pulse { width: 10px; height: 10px; background: #ef4444; border-radius: 50%; display: none; animation: pulse 1.5s infinite; }
-        
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        /* Audio Player */
+        audio { width: 100%; margin-top: 1rem; display: none; border-radius: 8px; }
 
-        /* Mobile Adjustments */
+        /* Mobile Responsive */
         @media (max-width: 600px) {
             .toolbar { flex-direction: column; align-items: stretch; }
-            .upload-zone { padding: 1rem; }
+            .spacer { display: none; }
         }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+<div class="app">
     <header>
-        <h1>🎙️ Pro Transcriber</h1>
-        <span class="badge">V 2.0</span>
+        <h1>🎙️ Smart Transcriber</h1>
+        <div id="statusIndicator" class="status-badge">Idle</div>
     </header>
 
-    <div class="main-content">
-        
-        <div class="upload-zone" id="dropZone">
-            <span class="upload-icon">📂</span>
-            <div id="uploadText">
-                <strong>Click to Upload Audio</strong> or drag and drop here<br>
-                <small style="color: #94a3b8">(Supports MP3, WAV, M4A - Unlimited Size)</small>
+    <main>
+        <div class="upload-box" id="uploadBox">
+            <div class="upload-content">
+                <span class="upload-icon">📂</span>
+                <strong>Click to Upload Audio File</strong>
+                <p>Supports MP3, WAV, M4A (Unlimited duration)</p>
             </div>
-            <div id="fileInfo" class="file-info"></div>
             <input type="file" id="audioInput" accept="audio/*,video/*">
         </div>
 
         <audio id="audioPlayer" controls></audio>
 
-        <div class="status-bar">
-            <div class="pulse" id="recordingIndicator"></div>
-            <span id="statusMessage">Ready to start.</span>
-        </div>
-
         <div class="toolbar">
-            <button id="startBtn" class="btn-start" onclick="startProcess()">
-                <span>▶ Start Transcription</span>
+            <button id="startBtn" class="btn-primary" onclick="startTranscribing()">
+                <span>▶ Start</span>
             </button>
-            <button id="stopBtn" class="btn-stop" onclick="stopProcess()">
+            <button id="stopBtn" class="btn-stop" onclick="stopTranscribing()">
                 <span>⏹ Stop</span>
             </button>
-            <button class="btn-action" onclick="toggleMicMode()" id="micToggleBtn">
-                🎤 Switch to Mic Only
+            
+            <button class="btn-ghost" onclick="toggleMode()" id="modeBtn">
+                🎤 Switch to Mic Mode
             </button>
             
             <div class="spacer"></div>
-
-            <button class="btn-action" onclick="copyToClipboard()">
-                📋 Copy
-            </button>
-            <button class="btn-action" onclick="downloadAsWord()">
-                💾 Save as Word
-            </button>
+            
+            <button class="btn-outline" onclick="copyText()">📋 Copy</button>
+            <button class="btn-outline" onclick="downloadDoc()">💾 Save Word</button>
+            <button class="btn-ghost" onclick="clearText()" title="Clear Text">🗑️</button>
         </div>
 
-        <div class="editor-container">
-            <textarea id="transcript" placeholder="Transcription will appear here..."></textarea>
+        <div class="editor-wrapper">
+            <textarea id="transcriptBox" placeholder="Text will appear here..."></textarea>
         </div>
-    </div>
+    </main>
 </div>
 
 <script>
-    /**
-     * STATE MANAGEMENT
-     */
-    const state = {
-        isRecording: false,
-        isMicMode: false,
-        finalTranscript: '',
-        interimTranscript: '',
-        recognition: null,
-        ignoreEndEvent: false
-    };
-
-    // DOM Elements
+    // --- Configuration ---
     const els = {
         audioInput: document.getElementById('audioInput'),
         audioPlayer: document.getElementById('audioPlayer'),
-        transcript: document.getElementById('transcript'),
+        transcriptBox: document.getElementById('transcriptBox'),
         startBtn: document.getElementById('startBtn'),
         stopBtn: document.getElementById('stopBtn'),
-        statusMsg: document.getElementById('statusMessage'),
-        pulse: document.getElementById('recordingIndicator'),
-        uploadText: document.getElementById('uploadText'),
-        fileInfo: document.getElementById('fileInfo'),
-        micToggleBtn: document.getElementById('micToggleBtn')
+        statusBadge: document.getElementById('statusIndicator'),
+        uploadBox: document.getElementById('uploadBox'),
+        modeBtn: document.getElementById('modeBtn')
     };
 
-    /**
-     * INITIALIZATION & SPEECH API SETUP
-     */
-    function initSpeech() {
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            alert("Your browser does not support Speech-to-Text. Please use Google Chrome or Edge.");
-            return null;
-        }
+    // --- State Variables ---
+    let recognition;
+    let isMicMode = false;
+    let finalTranscript = ''; // Stores the permanent, confirmed text
+    let ignoreEndEvent = false;
 
+    // --- Speech Recognition Setup ---
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
+        recognition = new SpeechRecognition();
         
-        recognition.continuous = true;     // Keep listening even if user pauses
-        recognition.interimResults = true; // Show words as they are being spoken
-        recognition.lang = 'en-US';        // Default Language
+        recognition.continuous = true;    
+        recognition.interimResults = true; 
+        recognition.lang = 'en-US';
 
-        recognition.onstart = function() {
-            state.isRecording = true;
-            updateUIState(true);
+        recognition.onstart = () => {
+            updateStatus('Running...', true);
+            els.startBtn.style.display = 'none';
+            els.stopBtn.style.display = 'flex';
         };
 
-        recognition.onerror = function(event) {
-            console.error("Speech Error", event.error);
-            if (event.error === 'no-speech') {
-                state.ignoreEndEvent = true;
+        recognition.onend = () => {
+            // Smart Restart Logic for Audio Files
+            if (!isMicMode && !els.audioPlayer.paused && !ignoreEndEvent) {
+                recognition.start(); // Restart instantly if file is still playing
             } else {
-                els.statusMsg.innerText = "Error: " + event.error;
+                updateStatus('Stopped', false);
+                els.startBtn.style.display = 'flex';
+                els.stopBtn.style.display = 'none';
+                ignoreEndEvent = false;
             }
         };
 
-        recognition.onend = function() {
-            state.isRecording = false;
-            // Auto-restart if audio file is still playing (Keep Alive Logic)
-            if (!state.isMicMode && !els.audioPlayer.paused && !state.ignoreEndEvent) {
-                recognition.start();
+        recognition.onerror = (e) => {
+            console.error(e.error);
+            if(e.error === 'no-speech') {
+                ignoreEndEvent = true; // Don't crash on silence
             } else {
-                updateUIState(false);
+                updateStatus('Error: ' + e.error, false);
             }
-            state.ignoreEndEvent = false;
         };
 
-        recognition.onresult = function(event) {
-            let interim = '';
-            
-            // Loop through results starting from the current result index
+        // *** THE CRITICAL FIX FOR REPETITION ***
+        recognition.onresult = (event) => {
+            let interimTranscript = ''; 
+
+            // Only process results from the current event loop
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
-                    state.finalTranscript += event.results[i][0].transcript + ' ';
+                    // It is finalized: Add to permanent storage
+                    finalTranscript += event.results[i][0].transcript + ' ';
                 } else {
-                    interim += event.results[i][0].transcript;
+                    // It is a guess: Add to temporary storage
+                    interimTranscript += event.results[i][0].transcript;
                 }
             }
 
-            // Update Text Area safely
-            // We combine the Safe Final Transcript + Current Interim
-            els.transcript.value = state.finalTranscript + interim;
+            // Update UI: Permanent + Current Guess
+            els.transcriptBox.value = finalTranscript + interimTranscript;
             
             // Auto Scroll
-            els.transcript.scrollTop = els.transcript.scrollHeight;
+            els.transcriptBox.scrollTop = els.transcriptBox.scrollHeight;
         };
 
-        return recognition;
+    } else {
+        alert("Browser not supported. Please use Google Chrome or Edge.");
     }
 
-    state.recognition = initSpeech();
-
-    /**
-     * FILE HANDLING
-     */
-    els.audioInput.addEventListener('change', function(e) {
+    // --- File Loading ---
+    els.audioInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (!file) return;
-
-        // Use URL.createObjectURL for large file support (Streams file, doesn't load to RAM)
-        const fileURL = URL.createObjectURL(file);
-        
-        els.audioPlayer.src = fileURL;
-        els.audioPlayer.style.display = 'block';
-        
-        // Update UI
-        els.uploadText.style.display = 'none';
-        els.fileInfo.style.display = 'block';
-        els.fileInfo.innerText = "Loaded: " + file.name;
-        
-        els.statusMsg.innerText = "File loaded. Turn up your volume and click Start.";
-        state.isMicMode = false;
-        els.micToggleBtn.innerText = "🎤 Switch to Mic Only";
+        if(file) {
+            const url = URL.createObjectURL(file);
+            els.audioPlayer.src = url;
+            els.audioPlayer.style.display = 'block';
+            els.uploadBox.style.display = 'none';
+            updateStatus('File Loaded', false);
+            
+            // Force file mode
+            isMicMode = false;
+            els.modeBtn.innerText = "🎤 Switch to Mic Mode";
+        }
     });
 
-    /**
-     * CORE FUNCTIONS
-     */
+    // --- Core Functions ---
 
-    function startProcess() {
-        if (!state.recognition) return;
+    function startTranscribing() {
+        if(!recognition) return;
+        
+        // If user manually edited the text box, sync our variable
+        // This ensures manual edits aren't overwritten
+        if (els.transcriptBox.value.trim() !== finalTranscript.trim()) {
+             finalTranscript = els.transcriptBox.value + ' ';
+        }
 
-        if (state.isMicMode) {
-            // Pure Mic Mode
-            state.recognition.start();
-            els.statusMsg.innerText = "Listening to microphone...";
+        if(isMicMode) {
+            recognition.start();
         } else {
-            // File Mode
-            if (!els.audioPlayer.src) {
-                alert("Please upload an audio file first, or switch to Mic mode.");
+            if(!els.audioPlayer.src) {
+                alert("Please upload a file first!");
                 return;
             }
             els.audioPlayer.play();
-            state.recognition.start();
-            els.statusMsg.innerText = "Playing audio & Transcribing...";
+            recognition.start();
         }
     }
 
-    function stopProcess() {
-        if (state.recognition) {
-            state.recognition.stop();
-            // Force stop loop logic
-            state.ignoreEndEvent = true; 
-        }
-        if (!state.isMicMode) {
-            els.audioPlayer.pause();
-        }
-        updateUIState(false);
+    function stopTranscribing() {
+        ignoreEndEvent = true; // Prevent auto-restart
+        if(recognition) recognition.stop();
+        if(!isMicMode) els.audioPlayer.pause();
     }
 
-    function toggleMicMode() {
-        state.isMicMode = !state.isMicMode;
-        
-        if (state.isMicMode) {
+    function toggleMode() {
+        isMicMode = !isMicMode;
+        stopTranscribing();
+
+        if(isMicMode) {
             els.audioPlayer.style.display = 'none';
-            els.audioPlayer.pause();
-            els.uploadText.style.display = 'block';
-            els.fileInfo.style.display = 'none';
-            els.micToggleBtn.innerText = "📂 Switch to File Upload";
-            els.micToggleBtn.style.background = "#e0e7ff";
-            els.micToggleBtn.style.color = "var(--primary)";
-            els.statusMsg.innerText = "Microphone Mode active.";
+            els.uploadBox.style.display = 'none';
+            els.modeBtn.innerText = "📂 Switch to File Mode";
+            updateStatus('Microphone Mode Ready', false);
         } else {
             els.audioPlayer.style.display = els.audioPlayer.src ? 'block' : 'none';
-            els.micToggleBtn.innerText = "🎤 Switch to Mic Only";
-            els.micToggleBtn.style.background = "white";
-            els.micToggleBtn.style.color = "var(--secondary)";
-            els.statusMsg.innerText = "File Mode active.";
+            els.uploadBox.style.display = els.audioPlayer.src ? 'none' : 'block';
+            els.modeBtn.innerText = "🎤 Switch to Mic Mode";
+            updateStatus('File Mode Ready', false);
         }
     }
 
-    /**
-     * UI HELPERS
-     */
-    function updateUIState(isRecording) {
-        if (isRecording) {
-            els.startBtn.style.display = 'none';
-            els.stopBtn.style.display = 'flex';
-            els.pulse.style.display = 'block';
-            els.transcript.style.borderColor = "var(--success)";
-        } else {
-            els.startBtn.style.display = 'flex';
-            els.stopBtn.style.display = 'none';
-            els.pulse.style.display = 'none';
-            els.statusMsg.innerText = "Stopped.";
-            els.transcript.style.borderColor = "#e2e8f0";
+    function clearText() {
+        if(confirm("Clear all text?")) {
+            finalTranscript = '';
+            els.transcriptBox.value = '';
         }
     }
 
-    /**
-     * EXPORT & UTILS
-     */
-    function copyToClipboard() {
-        if (!els.transcript.value) return;
-        els.transcript.select();
-        document.execCommand('copy'); // Legacy support
-        if(navigator.clipboard) navigator.clipboard.writeText(els.transcript.value);
-        
-        const originalText = els.statusMsg.innerText;
-        els.statusMsg.innerText = "✅ Copied to clipboard!";
-        setTimeout(() => els.statusMsg.innerText = originalText, 2000);
+    function updateStatus(text, isActive) {
+        els.statusBadge.innerText = text;
+        els.statusBadge.style.background = isActive ? '#22c55e' : 'rgba(0,0,0,0.2)';
+        els.statusBadge.style.color = isActive ? 'white' : '#334155';
     }
 
-    function downloadAsWord() {
-        const content = els.transcript.value;
-        if (!content) {
-            alert("No text to download!");
-            return;
-        }
+    // --- Export Functions ---
 
-        // Professional HTML Wrapper for Word with UTF-8 BOM
-        const header = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' 
-                  xmlns:w='urn:schemas-microsoft-com:office:word' 
-                  xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>Transcript</title>
-            <style>body { font-family: Arial, sans-serif; font-size: 12pt; }</style>
-            </head><body>`;
-            
+    function copyText() {
+        els.transcriptBox.select();
+        document.execCommand('copy');
+        if(navigator.clipboard) navigator.clipboard.writeText(els.transcriptBox.value);
+        updateStatus('Copied!', true);
+        setTimeout(() => updateStatus('Idle', false), 2000);
+    }
+
+    function downloadDoc() {
+        const text = els.transcriptBox.value;
+        if(!text) return alert("No text to save!");
+
+        const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' 
+                        xmlns:w='urn:schemas-microsoft-com:office:word' 
+                        xmlns='http://www.w3.org/TR/REC-html40'>
+                        <head><meta charset='utf-8'><title>Transcript</title></head><body>`;
         const footer = "</body></html>";
-        
-        // Convert newlines to breaks for Word
-        const formattedContent = content.replace(/\n/g, "<br>");
-        const sourceHTML = header + formattedContent + footer;
+        const content = header + text.replace(/\n/g, "<br>") + footer;
 
-        const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
-        
+        const blob = new Blob(['\ufeff', content], {type: 'application/msword'});
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         
-        const now = new Date();
-        const filename = `Transcript_${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}.doc`;
-        
+        const date = new Date();
         link.href = url;
-        link.download = filename;
+        link.download = `Transcript_${date.getTime()}.doc`; // Unique filename
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     }
-
-    // Initialize state
-    els.transcript.value = '';
 </script>
 
 </body>
