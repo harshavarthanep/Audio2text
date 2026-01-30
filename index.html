@@ -3,381 +3,448 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clean Audio Transcriber</title>
+    <title>Clean Speech Studio</title>
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --danger: #dc2626;
-            --bg: #f8fafc;
+            --primary: #6366f1; /* Indigo */
+            --primary-dark: #4f46e5;
+            --accent: #ec4899; /* Pink */
+            --bg: #f3f4f6;
             --surface: #ffffff;
-            --border: #e2e8f0;
-            --text: #334155;
+            --text-dark: #1f2937;
+            --text-gray: #6b7280;
+            --border: #e5e7eb;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg);
-            color: var(--text);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            padding: 2rem;
-            margin: 0;
             min-height: 100vh;
         }
 
-        .app {
-            background: var(--surface);
+        .container {
             width: 100%;
-            max-width: 850px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            border: 1px solid var(--border);
+            height: 90vh; /* Fixed height for app feel */
         }
 
-        /* Header */
+        /* --- Header --- */
         header {
-            background: #1e293b;
-            color: white;
-            padding: 1rem 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        header h1 { margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--primary-dark); }
+        .status-pill {
+            font-size: 0.85rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: #f3f4f6;
+            color: var(--text-gray);
+            font-weight: 600;
+        }
+
+        /* --- Main Layout --- */
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            padding: 1.5rem;
+            gap: 1rem;
+        }
+
+        /* --- Upload & Audio Player --- */
+        .media-controls {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .file-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 10px;
         }
-        
-        header h1 { font-size: 1.25rem; margin: 0; font-weight: 500; }
-        .status-badge { font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; }
 
-        /* Main Body */
-        main { padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+        audio { width: 100%; height: 40px; margin-top: 5px; border-radius: 20px; }
 
-        /* Upload Area */
-        .upload-box {
-            border: 2px dashed #cbd5e1;
-            border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-            background: #f1f5f9;
-            cursor: pointer;
+        /* --- Editor (The Fix) --- */
+        .editor-container {
+            flex: 1;
             position: relative;
-            transition: all 0.2s;
-        }
-
-        .upload-box:hover { border-color: var(--primary); background: #e0f2fe; }
-        
-        .upload-content p { margin: 5px 0 0; color: #64748b; font-size: 0.9rem; }
-        .upload-icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
-        
-        input[type="file"] {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
-        }
-
-        /* Controls Toolbar */
-        .toolbar {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            overflow: hidden;
             display: flex;
+            flex-direction: column;
+        }
+
+        /* We use a div, not a textarea, to style the "Ghost" text differently */
+        #outputDisplay {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            outline: none;
+            white-space: pre-wrap;
+        }
+
+        .final-text { color: var(--text-dark); }
+        .interim-text { color: #9ca3af; font-style: italic; }
+
+        /* --- Action Bar --- */
+        .action-bar {
+            padding: 1.5rem;
+            background: white;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
             flex-wrap: wrap;
-            gap: 12px;
-            padding: 12px;
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            border-radius: 8px;
             align-items: center;
         }
 
         button {
-            padding: 10px 16px;
+            padding: 0.75rem 1.25rem;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.9rem;
-            transition: 0.2s;
+            font-size: 0.95rem;
         }
 
         .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:hover { background: var(--primary-dark); }
         
-        .btn-stop { background: var(--danger); color: white; display: none; }
+        .btn-danger { background: #ef4444; color: white; display: none; }
         
-        .btn-outline { background: white; border: 1px solid #cbd5e1; color: var(--text); }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-secondary { background: white; border: 1px solid var(--border); color: var(--text-dark); }
+        .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
 
-        .btn-ghost { background: transparent; color: var(--text); }
-        .btn-ghost:hover { background: #e2e8f0; }
-
+        .btn-tool { background: #f3f4f6; color: var(--text-dark); }
+        
         .spacer { flex: 1; }
 
-        /* Text Area */
-        .editor-wrapper { position: relative; }
-        
-        textarea {
-            width: 100%;
-            height: 400px;
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            resize: vertical;
-            outline: none;
-            background: #fafafa;
-            color: #1e293b;
-            font-family: inherit;
-            box-sizing: border-box;
-        }
-
-        textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-
-        /* Audio Player */
-        audio { width: 100%; margin-top: 1rem; display: none; border-radius: 8px; }
-
-        /* Mobile Responsive */
-        @media (max-width: 600px) {
-            .toolbar { flex-direction: column; align-items: stretch; }
-            .spacer { display: none; }
+        @media (max-width: 700px) {
+            .action-bar { flex-direction: column; align-items: stretch; }
+            .file-row { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
 <body>
 
-<div class="app">
+<div class="container">
     <header>
-        <h1>🎙️ Smart Transcriber</h1>
-        <div id="statusIndicator" class="status-badge">Idle</div>
+        <h1>🎙️ Clean Speech Studio</h1>
+        <div id="status" class="status-pill">Ready</div>
     </header>
 
-    <main>
-        <div class="upload-box" id="uploadBox">
-            <div class="upload-content">
-                <span class="upload-icon">📂</span>
-                <strong>Click to Upload Audio File</strong>
-                <p>Supports MP3, WAV, M4A (Unlimited duration)</p>
+    <div class="main-area">
+        <div class="media-controls">
+            <div class="file-row">
+                <button class="btn-secondary" onclick="document.getElementById('audioInput').click()">
+                    📂 Upload Audio File
+                </button>
+                <input type="file" id="audioInput" accept="audio/*" style="display: none">
+                
+                <button class="btn-secondary" id="modeBtn" onclick="toggleMicMode()">
+                    🎤 Switch to Microphone
+                </button>
             </div>
-            <input type="file" id="audioInput" accept="audio/*,video/*">
+            <div id="fileName" style="font-size: 0.85rem; color: var(--primary);"></div>
+            <audio id="audioPlayer" controls style="display:none"></audio>
         </div>
 
-        <audio id="audioPlayer" controls></audio>
-
-        <div class="toolbar">
-            <button id="startBtn" class="btn-primary" onclick="startTranscribing()">
-                <span>▶ Start</span>
-            </button>
-            <button id="stopBtn" class="btn-stop" onclick="stopTranscribing()">
-                <span>⏹ Stop</span>
-            </button>
-            
-            <button class="btn-ghost" onclick="toggleMode()" id="modeBtn">
-                🎤 Switch to Mic Mode
-            </button>
-            
-            <div class="spacer"></div>
-            
-            <button class="btn-outline" onclick="copyText()">📋 Copy</button>
-            <button class="btn-outline" onclick="downloadDoc()">💾 Save Word</button>
-            <button class="btn-ghost" onclick="clearText()" title="Clear Text">🗑️</button>
+        <div class="editor-container">
+            <div id="outputDisplay" contenteditable="true" spellcheck="false"></div>
         </div>
+    </div>
 
-        <div class="editor-wrapper">
-            <textarea id="transcriptBox" placeholder="Text will appear here..."></textarea>
-        </div>
-    </main>
+    <div class="action-bar">
+        <button id="startBtn" class="btn-primary" onclick="startProcess()">
+            <span>▶ Start Transcribing</span>
+        </button>
+        <button id="stopBtn" class="btn-danger" onclick="stopProcess()">
+            <span>⏹ Stop</span>
+        </button>
+
+        <div class="spacer"></div>
+
+        <button class="btn-tool" onclick="speakText()">🔊 Read Aloud</button>
+        <button class="btn-tool" onclick="copyText()">📋 Copy</button>
+        <button class="btn-tool" onclick="downloadDoc()">💾 Download Word</button>
+        <button class="btn-tool" onclick="clearAll()">🗑️</button>
+    </div>
 </div>
 
 <script>
-    // --- Configuration ---
-    const els = {
-        audioInput: document.getElementById('audioInput'),
-        audioPlayer: document.getElementById('audioPlayer'),
-        transcriptBox: document.getElementById('transcriptBox'),
-        startBtn: document.getElementById('startBtn'),
-        stopBtn: document.getElementById('stopBtn'),
-        statusBadge: document.getElementById('statusIndicator'),
-        uploadBox: document.getElementById('uploadBox'),
-        modeBtn: document.getElementById('modeBtn')
+    // --- State Management ---
+    const state = {
+        isRecording: false,
+        isMicMode: false,
+        permanentText: "", // Confirmed text
+        interimText: "",   // Flickering guess text
+        recognition: null,
+        ignoreEnd: false
     };
 
-    // --- State Variables ---
-    let recognition;
-    let isMicMode = false;
-    let finalTranscript = ''; // Stores the permanent, confirmed text
-    let ignoreEndEvent = false;
+    // --- DOM Elements ---
+    const els = {
+        display: document.getElementById('outputDisplay'),
+        audioPlayer: document.getElementById('audioPlayer'),
+        audioInput: document.getElementById('audioInput'),
+        startBtn: document.getElementById('startBtn'),
+        stopBtn: document.getElementById('stopBtn'),
+        status: document.getElementById('status'),
+        modeBtn: document.getElementById('modeBtn'),
+        fileName: document.getElementById('fileName')
+    };
 
-    // --- Speech Recognition Setup ---
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
+    // --- Speech Initialization ---
+    function initSpeech() {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert("Browser not supported. Please use Google Chrome or Edge.");
+            return;
+        }
         
-        recognition.continuous = true;    
-        recognition.interimResults = true; 
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.continuous = true;
+        recognition.interimResults = true;
         recognition.lang = 'en-US';
 
         recognition.onstart = () => {
-            updateStatus('Running...', true);
-            els.startBtn.style.display = 'none';
-            els.stopBtn.style.display = 'flex';
+            state.isRecording = true;
+            updateUI(true);
+            els.status.innerText = state.isMicMode ? "Listening..." : "Transcribing File...";
+            els.status.style.color = "var(--primary)";
         };
 
         recognition.onend = () => {
-            // Smart Restart Logic for Audio Files
-            if (!isMicMode && !els.audioPlayer.paused && !ignoreEndEvent) {
-                recognition.start(); // Restart instantly if file is still playing
+            state.isRecording = false;
+            // Auto-restart if file is still playing (Loopback hack)
+            if (!state.isMicMode && !els.audioPlayer.paused && !state.ignoreEnd) {
+                recognition.start();
             } else {
-                updateStatus('Stopped', false);
-                els.startBtn.style.display = 'flex';
-                els.stopBtn.style.display = 'none';
-                ignoreEndEvent = false;
+                updateUI(false);
+                els.status.innerText = "Stopped";
+                els.status.style.color = "var(--text-gray)";
             }
+            state.ignoreEnd = false;
         };
 
         recognition.onerror = (e) => {
-            console.error(e.error);
-            if(e.error === 'no-speech') {
-                ignoreEndEvent = true; // Don't crash on silence
-            } else {
-                updateStatus('Error: ' + e.error, false);
-            }
+            console.log(e.error);
+            if (e.error === 'no-speech') state.ignoreEnd = true;
         };
 
-        // *** THE CRITICAL FIX FOR REPETITION ***
+        // *** THE FIX: LOGIC TO PREVENT REPETITION ***
         recognition.onresult = (event) => {
-            let interimTranscript = ''; 
+            let newFinal = "";
+            let newInterim = "";
 
-            // Only process results from the current event loop
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
-                    // It is finalized: Add to permanent storage
-                    finalTranscript += event.results[i][0].transcript + ' ';
+                    newFinal += event.results[i][0].transcript + " ";
                 } else {
-                    // It is a guess: Add to temporary storage
-                    interimTranscript += event.results[i][0].transcript;
+                    newInterim += event.results[i][0].transcript;
                 }
             }
 
-            // Update UI: Permanent + Current Guess
-            els.transcriptBox.value = finalTranscript + interimTranscript;
-            
-            // Auto Scroll
-            els.transcriptBox.scrollTop = els.transcriptBox.scrollHeight;
+            // Update State
+            state.permanentText += newFinal;
+            state.interimText = newInterim;
+
+            // Render to DOM (Visual separation)
+            renderText();
         };
 
-    } else {
-        alert("Browser not supported. Please use Google Chrome or Edge.");
+        return recognition;
     }
 
-    // --- File Loading ---
+    state.recognition = initSpeech();
+
+    // --- Rendering Logic (Prevents Stutter) ---
+    function renderText() {
+        // We do NOT use innerText += ...
+        // We wipe the display and repaint it: Final (Black) + Interim (Gray)
+        
+        // 1. Save cursor position (optional but good for UX, simplified here)
+        
+        // 2. Build HTML
+        // Note: We use the global 'state.permanentText' which is only updated on Final results.
+        const html = `<span class="final-text">${state.permanentText}</span><span class="interim-text">${state.interimText}</span>`;
+        
+        els.display.innerHTML = html;
+        
+        // 3. Auto Scroll
+        els.display.scrollTop = els.display.scrollHeight;
+    }
+
+    // --- Event Listeners ---
+    
+    // Handle Manual Edits (If user types, we must update state.permanentText)
+    els.display.addEventListener('input', () => {
+        state.permanentText = els.display.innerText;
+        state.interimText = ""; // Clear interim if user edits
+    });
+
     els.audioInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if(file) {
+        if (file) {
             const url = URL.createObjectURL(file);
             els.audioPlayer.src = url;
             els.audioPlayer.style.display = 'block';
-            els.uploadBox.style.display = 'none';
-            updateStatus('File Loaded', false);
+            els.fileName.innerText = "Loaded: " + file.name;
             
             // Force file mode
-            isMicMode = false;
-            els.modeBtn.innerText = "🎤 Switch to Mic Mode";
+            state.isMicMode = false;
+            els.modeBtn.innerText = "🎤 Switch to Microphone";
+            els.status.innerText = "File Loaded. Press Start.";
         }
     });
 
-    // --- Core Functions ---
+    // --- Controls ---
 
-    function startTranscribing() {
-        if(!recognition) return;
+    function startProcess() {
+        if (!state.recognition) return;
         
-        // If user manually edited the text box, sync our variable
-        // This ensures manual edits aren't overwritten
-        if (els.transcriptBox.value.trim() !== finalTranscript.trim()) {
-             finalTranscript = els.transcriptBox.value + ' ';
-        }
-
-        if(isMicMode) {
-            recognition.start();
+        if (state.isMicMode) {
+            state.recognition.start();
         } else {
-            if(!els.audioPlayer.src) {
+            if (!els.audioPlayer.src) {
                 alert("Please upload a file first!");
                 return;
             }
             els.audioPlayer.play();
-            recognition.start();
+            state.recognition.start();
         }
     }
 
-    function stopTranscribing() {
-        ignoreEndEvent = true; // Prevent auto-restart
-        if(recognition) recognition.stop();
-        if(!isMicMode) els.audioPlayer.pause();
+    function stopProcess() {
+        state.ignoreEnd = true;
+        if (state.recognition) state.recognition.stop();
+        if (!state.isMicMode) els.audioPlayer.pause();
     }
 
-    function toggleMode() {
-        isMicMode = !isMicMode;
-        stopTranscribing();
+    function toggleMicMode() {
+        state.isMicMode = !state.isMicMode;
+        stopProcess();
 
-        if(isMicMode) {
+        if (state.isMicMode) {
             els.audioPlayer.style.display = 'none';
-            els.uploadBox.style.display = 'none';
-            els.modeBtn.innerText = "📂 Switch to File Mode";
-            updateStatus('Microphone Mode Ready', false);
+            els.fileName.innerText = "";
+            els.modeBtn.innerText = "📂 Switch to File Upload";
+            els.status.innerText = "Mic Mode Ready";
         } else {
             els.audioPlayer.style.display = els.audioPlayer.src ? 'block' : 'none';
-            els.uploadBox.style.display = els.audioPlayer.src ? 'none' : 'block';
-            els.modeBtn.innerText = "🎤 Switch to Mic Mode";
-            updateStatus('File Mode Ready', false);
+            els.modeBtn.innerText = "🎤 Switch to Microphone";
+            els.status.innerText = "File Mode Ready";
         }
     }
 
-    function clearText() {
+    function updateUI(recording) {
+        if (recording) {
+            els.startBtn.style.display = 'none';
+            els.stopBtn.style.display = 'flex';
+            els.display.style.borderColor = "var(--primary)";
+        } else {
+            els.startBtn.style.display = 'flex';
+            els.stopBtn.style.display = 'none';
+            els.display.style.borderColor = "var(--border)";
+        }
+    }
+
+    // --- Output Features ---
+
+    function clearAll() {
         if(confirm("Clear all text?")) {
-            finalTranscript = '';
-            els.transcriptBox.value = '';
+            state.permanentText = "";
+            state.interimText = "";
+            renderText();
         }
     }
-
-    function updateStatus(text, isActive) {
-        els.statusBadge.innerText = text;
-        els.statusBadge.style.background = isActive ? '#22c55e' : 'rgba(0,0,0,0.2)';
-        els.statusBadge.style.color = isActive ? 'white' : '#334155';
-    }
-
-    // --- Export Functions ---
 
     function copyText() {
-        els.transcriptBox.select();
-        document.execCommand('copy');
-        if(navigator.clipboard) navigator.clipboard.writeText(els.transcriptBox.value);
-        updateStatus('Copied!', true);
-        setTimeout(() => updateStatus('Idle', false), 2000);
+        const text = els.display.innerText;
+        navigator.clipboard.writeText(text);
+        const original = els.status.innerText;
+        els.status.innerText = "Copied!";
+        setTimeout(() => els.status.innerText = original, 1500);
+    }
+
+    function speakText() {
+        const text = els.display.innerText;
+        if(!text) return;
+        
+        // Native Browser TTS
+        window.speechSynthesis.cancel(); // Stop previous
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        window.speechSynthesis.speak(utterance);
+        
+        els.status.innerText = "Reading Aloud...";
+        utterance.onend = () => els.status.innerText = "Finished Reading";
     }
 
     function downloadDoc() {
-        const text = els.transcriptBox.value;
-        if(!text) return alert("No text to save!");
+        const text = els.display.innerText;
+        if (!text) { alert("No text to download"); return; }
 
         const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' 
                         xmlns:w='urn:schemas-microsoft-com:office:word' 
                         xmlns='http://www.w3.org/TR/REC-html40'>
                         <head><meta charset='utf-8'><title>Transcript</title></head><body>`;
         const footer = "</body></html>";
-        const content = header + text.replace(/\n/g, "<br>") + footer;
+        const html = header + text.replace(/\n/g, "<br>") + footer;
 
-        const blob = new Blob(['\ufeff', content], {type: 'application/msword'});
+        const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        
-        const date = new Date();
         link.href = url;
-        link.download = `Transcript_${date.getTime()}.doc`; // Unique filename
+        link.download = `Transcript_${Date.now()}.doc`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     }
-</script>
 
+    // Initial render
+    renderText();
+
+</script>
 </body>
 </html>
